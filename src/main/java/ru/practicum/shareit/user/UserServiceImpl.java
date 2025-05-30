@@ -53,12 +53,6 @@ public class UserServiceImpl implements UserService {
             throw new NotFoundException("User not found with id: " + userId);
         }
 
-        // Валидация нового email
-        if (userDto.getEmail() != null && userDto.getEmail().isBlank()) {
-            log.warn("Email cannot be empty");
-            throw new ValidationException("Email cannot be empty");
-        }
-
         // Проверка уникальности нового email
         if (userDto.getEmail() != null &&
                 !userDto.getEmail().equals(existingUser.getEmail()) &&
