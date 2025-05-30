@@ -1,0 +1,31 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: shareit
+  main:
+    banner-mode: off
+
+logging:
+  level:
+    root: INFO
+    ru.practicum.shareit: DEBUG
+    org.springframework.web: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  file:
+    name: logs/shareit.log
+    max-history: 30
+    max-size: 10MB
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics
+  endpoint:
+    health:
+      show-details: always
+    metrics:
+      enabled: true
