@@ -23,7 +23,7 @@ public class Item {
     @NotNull(message = "Available status is required")
     private Boolean available;
 
-    @NotNull(message = "Owner is required")
+    //@NotNull(message = "Owner is required")
     private User owner;
 
     private ItemRequest request;

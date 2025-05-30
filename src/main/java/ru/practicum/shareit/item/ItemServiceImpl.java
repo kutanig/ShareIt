@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.request.ItemRequest;
 import ru.practicum.shareit.request.ItemRequestDto;
 import ru.practicum.shareit.request.ItemRequestMapper;
@@ -13,7 +12,10 @@ import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserMapper;
 import ru.practicum.shareit.user.UserService;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Service
@@ -65,7 +67,7 @@ public class ItemServiceImpl implements ItemService {
 
         if (!existingItem.getOwner().getId().equals(ownerId)) {
             log.warn("User {} is not owner of item {}", ownerId, itemId);
-            throw new ValidationException("User is not the owner of the item");
+            throw new NotFoundException("User is not the owner of the item");
         }
 
         String originalName = existingItem.getName();

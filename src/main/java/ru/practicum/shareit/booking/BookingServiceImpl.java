@@ -3,14 +3,20 @@ package ru.practicum.shareit.booking;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.exception.*;
+import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.exception.SelfBookingException;
+import ru.practicum.shareit.exception.UnavailableItemException;
+import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.Item;
 import ru.practicum.shareit.item.ItemService;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserService;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
@@ -169,7 +175,8 @@ public class BookingServiceImpl implements BookingService {
         List<BookingDto> result = bookings.stream()
                 .filter(booking -> {
                     switch (bookingState) {
-                        case ALL: return true;
+                        case ALL:
+                            return true;
                         case CURRENT:
                             return booking.getStart().isBefore(now) && booking.getEnd().isAfter(now);
                         case PAST:
@@ -180,7 +187,8 @@ public class BookingServiceImpl implements BookingService {
                             return booking.getStatus() == BookingStatus.WAITING;
                         case REJECTED:
                             return booking.getStatus() == BookingStatus.REJECTED;
-                        default: return true;
+                        default:
+                            return true;
                     }
                 })
                 .map(BookingMapper::toBookingDto)
