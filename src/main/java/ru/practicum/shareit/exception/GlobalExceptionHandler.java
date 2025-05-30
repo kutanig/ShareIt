@@ -1,5 +1,6 @@
 package ru.practicum.shareit.exception;
 
+import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -8,6 +9,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -15,15 +17,34 @@ import java.util.stream.Collectors;
 public class GlobalExceptionHandler {
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    @ExceptionHandler(NotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleNotFound(NotFoundException ex) {
-        log.warn("Not found error: {}", ex.getMessage());
-        return new ErrorResponse("Not Found", ex.getMessage());
+    @ExceptionHandler(DuplicateEmailException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)  // 409 Conflict
+    public ErrorResponse handleDuplicateEmail(DuplicateEmailException ex) {
+        log.warn("Email conflict: {}", ex.getMessage());
+        return new ErrorResponse("Conflict", ex.getMessage());
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ValidationErrorResponse handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
+        List<FieldError> fieldErrors = ex.getBindingResult().getFieldErrors().stream()
+                .map(error -> new FieldError(
+                        error.getField(),
+                        error.getDefaultMessage()))
+                .collect(Collectors.toList());
+
+        log.warn("Validation failed for {} fields: {}", fieldErrors.size(), fieldErrors);
+        return new ValidationErrorResponse("Validation Failed", fieldErrors);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleConstraintViolation(ConstraintViolationException ex) {
+        log.warn("Constraint violation: {}", ex.getMessage());
+        return new ErrorResponse("Constraint Violation", ex.getMessage());
     }
 
     @ExceptionHandler({ValidationException.class,
-            DuplicateEmailException.class,
             UnavailableItemException.class,
             SelfBookingException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -39,17 +60,11 @@ public class GlobalExceptionHandler {
         return new ErrorResponse("Forbidden", ex.getMessage());
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ValidationErrorResponse handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
-        List<FieldError> fieldErrors = ex.getBindingResult().getFieldErrors().stream()
-                .map(error -> new FieldError(
-                        error.getField(),
-                        error.getDefaultMessage()))
-                .collect(Collectors.toList());
-
-        log.warn("Validation failed: {}", fieldErrors);
-        return new ValidationErrorResponse("Validation Failed", fieldErrors);
+    @ExceptionHandler(NotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleNotFound(NotFoundException ex) {
+        log.warn("Not found error: {}", ex.getMessage());
+        return new ErrorResponse("Not Found", ex.getMessage());
     }
 
     @ExceptionHandler(Exception.class)
@@ -59,7 +74,7 @@ public class GlobalExceptionHandler {
         return new ErrorResponse("Internal Server Error", "An unexpected error occurred");
     }
 
-    static class ErrorResponse {
+    public static class ErrorResponse {
         private final String error;
         private final String message;
 
@@ -77,7 +92,7 @@ public class GlobalExceptionHandler {
         }
     }
 
-    static class ValidationErrorResponse extends ErrorResponse {
+    public static class ValidationErrorResponse extends ErrorResponse {
         private final List<FieldError> errors;
 
         public ValidationErrorResponse(String error, List<FieldError> errors) {
@@ -90,7 +105,7 @@ public class GlobalExceptionHandler {
         }
     }
 
-    static class FieldError {
+    public static class FieldError {
         private final String field;
         private final String message;
 

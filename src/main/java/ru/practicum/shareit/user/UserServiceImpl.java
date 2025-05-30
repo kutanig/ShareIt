@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.DuplicateEmailException;
 import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.exception.ValidationException;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
@@ -18,6 +19,14 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDto createUser(UserDto userDto) {
         log.info("Creating new user with email: {}", userDto.getEmail());
+
+        if (userDto.getName() == null || userDto.getName().isBlank()) {
+            throw new ValidationException("Name cannot be blank");
+        }
+
+        if (userDto.getEmail() == null || userDto.getEmail().isBlank()) {
+            throw new ValidationException("Email cannot be blank");
+        }
 
         // Проверка уникальности email
         if (isEmailExists(userDto.getEmail())) {
@@ -42,6 +51,12 @@ public class UserServiceImpl implements UserService {
         if (existingUser == null) {
             log.warn("User not found for update: ID={}", userId);
             throw new NotFoundException("User not found with id: " + userId);
+        }
+
+        // Валидация нового email
+        if (userDto.getEmail() != null && userDto.getEmail().isBlank()) {
+            log.warn("Email cannot be empty");
+            throw new ValidationException("Email cannot be empty");
         }
 
         // Проверка уникальности нового email
@@ -113,15 +128,9 @@ public class UserServiceImpl implements UserService {
     }
 
     private boolean isEmailExists(String email) {
-        boolean exists = users.values().stream()
-                .anyMatch(u -> u.getEmail().equals(email));
-
-        if (exists) {
-            log.debug("Email check: {} already exists", email);
-        } else {
-            log.debug("Email check: {} is available", email);
-        }
-
-        return exists;
+        return users.values().stream()
+                .map(User::getEmail)
+                .filter(Objects::nonNull)
+                .anyMatch(e -> e.equals(email));
     }
 }

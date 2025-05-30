@@ -1,12 +1,10 @@
 package ru.practicum.shareit.user;
 
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.shareit.exception.DuplicateEmailException;
-import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.exception.ValidationException;
 
 import java.util.List;
 
@@ -22,7 +20,7 @@ public class UserController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public UserDto createUser(@RequestBody UserDto userDto) {
+    public UserDto createUser(@Valid @RequestBody UserDto userDto) {
         log.info("POST /users - Creating new user: {}", userDto.getEmail());
         UserDto createdUser = userService.createUser(userDto);
         log.debug("Created user: ID={}, Email={}", createdUser.getId(), createdUser.getEmail());
@@ -32,7 +30,7 @@ public class UserController {
     @PatchMapping("/{userId}")
     public UserDto updateUser(
             @PathVariable Long userId,
-            @RequestBody UserDto userDto
+            @Valid @RequestBody UserDto userDto
     ) {
         log.info("PATCH /users/{} - Updating user", userId);
         UserDto updatedUser = userService.updateUser(userId, userDto);
@@ -62,26 +60,5 @@ public class UserController {
         log.info("DELETE /users/{} - Deleting user", userId);
         userService.deleteUser(userId);
         log.debug("Deleted user: ID={}", userId);
-    }
-
-    @ExceptionHandler({NotFoundException.class})
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public String handleNotFound(NotFoundException ex) {
-        log.warn("Not found error: {}", ex.getMessage());
-        return ex.getMessage();
-    }
-
-    @ExceptionHandler({DuplicateEmailException.class, ValidationException.class})
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public String handleBadRequest(Exception ex) {
-        log.warn("Bad request: {}", ex.getMessage());
-        return ex.getMessage();
-    }
-
-    @ExceptionHandler({Exception.class})
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public String handleInternalError(Exception ex) {
-        log.error("Internal server error", ex);
-        return "Internal server error";
     }
 }
